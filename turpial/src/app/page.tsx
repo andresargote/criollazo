@@ -1,44 +1,38 @@
 "use client"
 import styles from "./styles/page.module.css";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { CellState, Key, GridPosition } from "./types";
+import useBoard from "./hooks/useBoard";
 
-const ROW = 6
-const COLUMS = 5
-
-enum CellState {
-  EMPTY = 'empty',
-  FILLED = 'filled',
-  CORRECT = 'correct',
-  INCORRECT = 'incorrect',
-  WRONG_POSITION = 'wrong-position'
-}
-
-type Cell = {
-  value: string;
-  state: CellState;
-}
-
-type Position = {
-  row: number;
-  cell: number;
-}
-
-type KeyboardKey = {
-  key: string;
-  value: string
-}
-
+/**
+ * Hook useBoardNavigation:
+ * 
+ * 1. Recibe el cursorPosition actual y los límites del board.
+ * 2. Expone funciones puras que calculan los siguientes movimientos:
+ *    - Calcular la siguiente celda
+ *    - Calcular la siguiente fila
+ *    - Calcular la celda anterior
+ * 3. Incluye funciones de validación para verificar si es posible 
+ *    moverse a la siguiente celda o fila.
+ * 
+ * Las funciones de cálculo manejan automáticamente los límites del tablero,
+ * retornando posiciones válidas dentro de los rangos permitidos.
+ */
 
 
 export default function Home() {
-  // en el futuro se va generar de forma dinamica
-  const [board, setBoard] = useState<Array<Cell[]>>([])
-  const [currentBoardPosition, setCurrentBoardPosition] = useState<Position>({
+
+  const { isLoading, board, updateBoard, maxCellIndex, maxRowIndex } = useBoard({
+    cellsPerRow: 2,
+    totalRows: 2
+  })
+
+  const [cursorPosition, setCursorPosition] = useState<GridPosition>({
     row: 0,
     cell: 0
   })
 
-  const keyboardLayout = useRef<KeyboardKey[][]>([
+  const keyboardLayout = useRef<Key[][]>([
     [
       { key: 'Q', value: 'Q' },
       { key: 'W', value: 'W' },
@@ -77,86 +71,99 @@ export default function Home() {
     ]
   ])
 
-  const generateBoard = (rows: number, columns: number): Array<Cell[]> => {
-    return Array(rows).fill(null).map(() =>
-      Array(columns).fill(null).map(() => ({
-        value: "",
-        state: CellState.EMPTY
-      }))
-    )
-  }
+  const moveCursorToCell = (row: number, cell: number) => {
+    if (row !== cursorPosition.row) return
 
-  useEffect(() => {
-    setBoard(generateBoard(ROW, COLUMS))
-  }, [])
-
-  const handleKeyPress = (key: string) => {
-    if (currentBoardPosition.row >= ROW) return
-
-
-    if (/^[A-ZÑ]$/u.test(key) && currentBoardPosition.cell <= (COLUMS - 1)) {
-
-      const newBoard = [...board]
-      newBoard[currentBoardPosition.row][currentBoardPosition.cell] = {
-        value: key,
-        state: CellState.FILLED
-      }
-
-      setBoard(newBoard)
-
-
-
-      setCurrentBoardPosition({
-        ...currentBoardPosition,
-        cell: currentBoardPosition.cell !== (COLUMS - 1) ? currentBoardPosition.cell + 1 : COLUMS - 1
-      })
-    } else if (key === "Enter") {
-      const getRow = board[currentBoardPosition.row]
-      // esto funciona bien solo si no puede seleccionar la celda manualmente en un siguiente update dejara de funcionar
-      const isRowUnfilled = getRow[getRow.length - 1].state === CellState.EMPTY
-
-      if (isRowUnfilled) return
-
-      // validar la palabra y actualizar el board
-
-      setCurrentBoardPosition({
-        cell: 0,
-        row: currentBoardPosition.row + 1
-      })
-    } else if (key === "Backspace" && currentBoardPosition.cell >= 0) {
-      const newBoard = [...board]
-
-      if (newBoard[currentBoardPosition.row][currentBoardPosition.cell]?.state === CellState.FILLED) {
-        console.log("here")
-        newBoard[currentBoardPosition.row][currentBoardPosition.cell] = {
-          value: "",
-          state: CellState.EMPTY
-        }
-      } else {
-        newBoard[currentBoardPosition.row][currentBoardPosition.cell - 1] = {
-          value: "",
-          state: CellState.EMPTY
-        }
-      }
-
-
-      setBoard(newBoard)
-      setCurrentBoardPosition({
-        ...currentBoardPosition,
-        cell: currentBoardPosition.cell === 0 ? 0 : currentBoardPosition.cell - 1
-      })
-    }
-  }
-
-  const handleCellPress = (row: number, cell: number) => {
-    if (row !== currentBoardPosition.row) return
-
-    setCurrentBoardPosition({
-      row: currentBoardPosition.row,
+    setCursorPosition({
+      row: cursorPosition.row,
       cell
     })
   }
 
+  const isValidLetter = (character: string) => {
+    return /^[A-ZÑ]$/u.test(character)
+  }
+
+  const canMoveToNextCell = (currentCell: number, maxIndex: number) => {
+    return currentCell <= maxIndex
+  }
+
+  const canMoveToNextRow = (currentRow: number, maxIndex: number) => {
+    return currentRow < maxIndex
+  }
+
+  const advanceToNextCell = (): GridPosition => {
+    return {
+      ...cursorPosition,
+      cell: cursorPosition.cell + 1
+    }
+  }
+
+  const advanceToNextRow = (): GridPosition => {
+    return {
+      cell: 0,
+      row: cursorPosition.row + 1
+    }
+  }
+
+  const moveToPreviousCell = (): GridPosition => {
+    return {
+      ...cursorPosition,
+      cell: cursorPosition.cell > 0 ? cursorPosition.cell - 1 : 0
+    }
+  }
+
+
+  const processKeyInput = (key: string) => {
+    const canFillCell = isValidLetter(key) && canMoveToNextCell(cursorPosition.cell, maxCellIndex)
+    const canEnterRow = key === "Enter" && canMoveToNextRow(cursorPosition.row, maxRowIndex)
+    const canBackspace = key === "Backspace"
+
+    if (canFillCell) {
+      const updatedBoard = [...board]
+      updatedBoard[cursorPosition.row][cursorPosition.cell] = {
+        value: key,
+        state: CellState.FILLED
+      }
+
+      updateBoard(updatedBoard)
+      setCursorPosition(advanceToNextCell())
+      return
+    }
+
+    if (canEnterRow) {
+      const currentRow = board[cursorPosition.row]
+      const hasEmptyCell = currentRow.find((cell) => cell.state === CellState.EMPTY)
+
+      if (hasEmptyCell) return
+
+
+
+      setCursorPosition(advanceToNextRow())
+      return
+    }
+
+    if (canBackspace) {
+      const updatedBoard = [...board]
+
+      if (updatedBoard[cursorPosition.row][cursorPosition.cell]?.state === CellState.FILLED) {
+        updatedBoard[cursorPosition.row][cursorPosition.cell] = {
+          value: "",
+          state: CellState.EMPTY
+        }
+      } else {
+        updatedBoard[cursorPosition.row][cursorPosition.cell - 1] = {
+          value: "",
+          state: CellState.EMPTY
+        }
+      }
+
+
+      updateBoard(updatedBoard)
+      setCursorPosition(moveToPreviousCell())
+      return
+    }
+  }
 
 
   return (
@@ -165,45 +172,49 @@ export default function Home() {
         <h1>Criollazo</h1>
       </header>
       <main>
-        <section className={styles.board}>
-          {
-            board.map((row, rowIndex) => {
-              return (
-                <div key={`row_${rowIndex}`} className={styles.row}>
-                  {
-                    row.map((cell, cellIndex) => {
-                      return (
-                        <div key={`row_${rowIndex}_col${cellIndex}`} className={`${styles.cell} ${cellIndex === currentBoardPosition.cell && rowIndex === currentBoardPosition.row && styles.cellCurrent}`}
+        {isLoading ? <p>Cargando tablero...</p> : (
 
-                          onClick={() => handleCellPress(rowIndex, cellIndex)}
-                        >
-                          {cell.value}
-                        </div>
-                      )
-                    })
-                  }
-
-                </div>
-              )
-            })
-
-          }
-        </section>
-        <section className={styles.keyboard}>
-          {keyboardLayout.current.map((row, rowIndex) => {
-            return (
-              <div className={styles.keyboardRow} key={`keyboard_${rowIndex}`}>
-                {row.map((key) => {
+          <>
+            <section className={styles.board}>
+              {
+                board.map((row, rowIndex) => {
                   return (
-                    <button key={key.key} className={styles.key} onClick={() => handleKeyPress(key.key)}>
-                      {key.value}
-                    </button>
+                    <div key={`row_${rowIndex}`} className={styles.row}>
+                      {
+                        row.map((cell, cellIndex) => {
+                          return (
+                            <div key={`row_${rowIndex}_col${cellIndex}`} className={`${styles.cell} ${cellIndex === cursorPosition.cell && rowIndex === cursorPosition.row && styles.cellCurrent}`}
+
+                              onClick={() => moveCursorToCell(rowIndex, cellIndex)}
+                            >
+                              {cell.value}
+                            </div>
+                          )
+                        })
+                      }
+
+                    </div>
                   )
-                })}
-              </div>
-            )
-          })}
-        </section>
+                })
+              }
+            </section>
+            <section className={styles.keyboard}>
+              {keyboardLayout.current.map((row, rowIndex) => {
+                return (
+                  <div className={styles.keyboardRow} key={`keyboard_${rowIndex}`}>
+                    {row.map((key) => {
+                      return (
+                        <button key={key.key} className={styles.key} onClick={() => processKeyInput(key.key)}>
+                          {key.value}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
+              })}
+            </section>
+          </>
+        )}
       </main>
     </>
   );

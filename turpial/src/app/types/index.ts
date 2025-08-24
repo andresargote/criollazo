@@ -20,3 +20,13 @@ export type Key = {
     key: string;
     value: string
 }
+
+export type LetterCount = {
+    [key: string]: number;
+}
+
+export enum LetterState {
+    HIT = "hit",
+    CLOSE = "close",
+    MISS = "miss"
+}

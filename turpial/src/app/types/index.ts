@@ -1,14 +1,6 @@
-export enum CellState {
-    EMPTY = 'empty',
-    FILLED = 'filled',
-    CORRECT = 'correct',
-    INCORRECT = 'incorrect',
-    WRONG_POSITION = 'wrong-position'
-}
-
 export type Cell = {
     value: string;
-    state: CellState;
+    state: LetterState;
 }
 
 export type GridPosition = {
@@ -28,5 +20,7 @@ export type LetterCount = {
 export enum LetterState {
     HIT = "hit",
     CLOSE = "close",
-    MISS = "miss"
+    MISS = "miss",
+    EMPTY = "empty",
+    FILLED = "filled"
 }

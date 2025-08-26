@@ -358,3 +358,16 @@ a.secondary {
     gap: 4px;
   }
 }
+
+
+.hit {
+  background-color: green;
+}
+
+.close {
+  background-color: yellow;
+}
+
+.miss {
+  background-color: red;
+}

@@ -9,10 +9,6 @@ ESTADO ACTUAL:
 ✓ Estado de attempts guardandose
 
 MINIMO PARA VERSION JUGABLE:
-1. APLICAR COLORES CSS a celdas segun LetterState (PRIORITARIO)
-   - HIT = verde, CLOSE = amarillo, MISS = gris
-   - Mostrar attempts previos con colores
-   
 2. LOGICA DE FIN DE JUEGO
    - Detectar cuando se acabaron los 6 intentos (PERDISTE)
    - Mostrar palabra secreta al perder
@@ -27,7 +23,7 @@ MINIMO PARA VERSION JUGABLE:
 "use client"
 import styles from "./styles/page.module.css";
 import { useMemo, useState } from "react";
-import { CellState, Key, GridPosition, LetterCount, LetterState } from "./types";
+import { Key, GridPosition, LetterCount, LetterState, Cell } from "./types";
 import useBoard from "./hooks/useBoard";
 import { useBoardNavigation } from "./hooks/useBoardNavigation";
 
@@ -92,8 +88,6 @@ export default function Home() {
 
   })
 
-  const [attempts, setAttempts] = useState<LetterState[][]>([])
-
   const letterCount = useMemo(() => {
     const count: LetterCount = {}
 
@@ -150,7 +144,7 @@ export default function Home() {
       const updatedBoard = [...board]
       updatedBoard[cursorPosition.row][cursorPosition.cell] = {
         value: key,
-        state: CellState.FILLED
+        state: LetterState.FILLED
       }
 
       updateBoard(updatedBoard)
@@ -160,7 +154,7 @@ export default function Home() {
 
     if (canEnterRow) {
       const currentRow = board[cursorPosition.row]
-      const hasEmptyCell = currentRow.find((cell) => cell.state === CellState.EMPTY)
+      const hasEmptyCell = currentRow.find((cell) => cell.state === LetterState.EMPTY)
 
       if (hasEmptyCell) return
 
@@ -168,46 +162,58 @@ export default function Home() {
 
 
 
-      const attemptEvaluation: LetterState[] = []
+      const attemptEvaluation: Cell[] = []
       currentRow.forEach(({ value }, index) => {
         const secretLetter = SECRET_WORD[index]
         if (value === secretLetter) {
           availableLetters[secretLetter] -= 1
-          attemptEvaluation.push(LetterState.HIT)
+          attemptEvaluation.push({
+            value,
+            state: LetterState.HIT
+          })
         } else if (availableLetters[value] && availableLetters[value] > 0) {
           availableLetters[value] -= 1
-          attemptEvaluation.push(LetterState.CLOSE)
+          attemptEvaluation.push({
+            value,
+            state: LetterState.CLOSE
+          })
         } else {
-          attemptEvaluation.push(LetterState.MISS)
+          attemptEvaluation.push({
+            value,
+            state: LetterState.MISS
+          })
         }
       })
 
 
-      const hasWon = attemptEvaluation.every(state => state === LetterState.HIT)
-      setAttempts([...attempts, attemptEvaluation])
+      const hasWon = attemptEvaluation.every(cell => cell.state === LetterState.HIT)
+      const updatedBoard = [...board]
+      updatedBoard[cursorPosition.row] = attemptEvaluation
+      updateBoard(updatedBoard)
 
-      if (!hasWon) {
+
+      if (hasWon) {
+        // hacerlo con un estado para poder detectar si perdio
+        setTimeout(() => {
+          alert("GANASTE")
+        }, 250)
+      } else {
         setCursorPosition(advanceToNextRow())
-        return
       }
-
-      // aqui entienod que hay que crear un estado para saber si el user gano, ademas probablemente hay que trabajar con el localStorage para poder tener un estado "persistente" de los intentos del usuario
-      alert("GANASTE")
-      return
     }
 
     if (canBackspace) {
       const updatedBoard = [...board]
 
-      if (updatedBoard[cursorPosition.row][cursorPosition.cell]?.state === CellState.FILLED) {
+      if (updatedBoard[cursorPosition.row][cursorPosition.cell]?.state === LetterState.FILLED) {
         updatedBoard[cursorPosition.row][cursorPosition.cell] = {
           value: "",
-          state: CellState.EMPTY
+          state: LetterState.EMPTY
         }
       } else {
         updatedBoard[cursorPosition.row][cursorPosition.cell - 1] = {
           value: "",
-          state: CellState.EMPTY
+          state: LetterState.EMPTY
         }
       }
 
@@ -216,6 +222,23 @@ export default function Home() {
       setCursorPosition(moveToPreviousCell())
       return
     }
+  }
+
+  const cellStyle = (state: LetterState) => {
+    console.log("here", state)
+    if (state === LetterState.HIT) {
+      return styles.hit
+    }
+
+    if (state === LetterState.CLOSE) {
+      return styles.close
+    }
+
+    if (state === LetterState.MISS) {
+      return styles.miss
+    }
+
+    return null
   }
 
 
@@ -235,8 +258,9 @@ export default function Home() {
                     <div key={`row_${rowIndex}`} className={styles.row}>
                       {
                         row.map((cell, cellIndex) => {
+                          console.log(cell.value, cell.state)
                           return (
-                            <div key={`row_${rowIndex}_col${cellIndex}`} className={`${styles.cell} ${cellIndex === cursorPosition.cell && rowIndex === cursorPosition.row && styles.cellCurrent}`}
+                            <div key={`row_${rowIndex}_col${cellIndex}`} className={`${styles.cell} ${cellIndex === cursorPosition.cell && rowIndex === cursorPosition.row && styles.cellCurrent} ${cell.state !== LetterState.EMPTY && cell.state !== LetterState.FILLED ? cellStyle(cell.state) : ''}`}
 
                               onClick={() => moveCursorToCell(rowIndex, cellIndex)}
                             >

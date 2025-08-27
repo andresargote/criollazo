@@ -24,3 +24,9 @@ export enum LetterState {
     EMPTY = "empty",
     FILLED = "filled"
 }
+
+export enum GameState {
+    PLAYING = "playing",
+    WON = "won",
+    LOST = "lost"
+}

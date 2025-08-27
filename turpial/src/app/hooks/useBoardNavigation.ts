@@ -34,7 +34,6 @@ export function useBoardNavigation({
 
     const getNextRowIndex = () => {
         let rowIndex = position.row
-        console.log(rowIndex)
         if (canMoveToNextRow(rowIndex)) {
             rowIndex += 1
             return rowIndex
@@ -48,11 +47,11 @@ export function useBoardNavigation({
     }
 
     const canMoveToNextRow = (position: number) => {
-        return position < maxRowIndex
+        return position <= maxRowIndex
     }
 
     const canMoveToPreviousPosition = (position: number) => {
-        return position >= 0
+        return position > 0
     }
 
 

@@ -10,8 +10,6 @@ ESTADO ACTUAL:
 
 MINIMO PARA VERSION JUGABLE:
 2. LOGICA DE FIN DE JUEGO
-   - Detectar cuando se acabaron los 6 intentos (PERDISTE)
-   - Mostrar palabra secreta al perder
    - Boton "Jugar de nuevo"
 
 3. ARRAY DE PALABRAS
@@ -22,8 +20,8 @@ MINIMO PARA VERSION JUGABLE:
 
 "use client"
 import styles from "./styles/page.module.css";
-import { useMemo, useState } from "react";
-import { Key, GridPosition, LetterCount, LetterState, Cell } from "./types";
+import { useEffect, useMemo, useState } from "react";
+import { Key, GridPosition, LetterCount, LetterState, Cell, GameState } from "./types";
 import useBoard from "./hooks/useBoard";
 import { useBoardNavigation } from "./hooks/useBoardNavigation";
 
@@ -53,7 +51,6 @@ const KEYBOARD_LAYOUT: Key[][] = [
     { key: 'L', value: 'L' },
     { key: "Ñ", value: "Ñ" }
   ],
-
   [
     { key: 'Enter', value: 'ENTER' },
     { key: 'Z', value: 'Z' },
@@ -67,13 +64,13 @@ const KEYBOARD_LAYOUT: Key[][] = [
   ]
 ]
 
-const SECRET_WORD = "CRIOLLO"
+const SECRET_WORD = "TUCUSO"
 
 export default function Home() {
 
   const { isLoading, board, updateBoard, maxCellIndex, maxRowIndex } = useBoard({
     cellsPerRow: SECRET_WORD.length,
-    totalRows: 6
+    totalRows: SECRET_WORD.length > 6 ? 6 : SECRET_WORD.length + 1
   })
 
   const [cursorPosition, setCursorPosition] = useState<GridPosition>({
@@ -88,6 +85,8 @@ export default function Home() {
 
   })
 
+  const [gameStatus, setGameStatus] = useState<string>(GameState.PLAYING)
+
   const letterCount = useMemo(() => {
     const count: LetterCount = {}
 
@@ -100,8 +99,23 @@ export default function Home() {
 
   }, [SECRET_WORD])
 
+  useEffect(() => {
+    if (gameStatus === GameState.WON) {
+      setTimeout(() => {
+        alert("Ganaste!")
+      }, 500)
+    }
+
+    if (gameStatus === GameState.LOST) {
+      setTimeout(() => {
+        alert("Perdiste!")
+      }, 500)
+    }
+
+  }, [gameStatus])
+
   const moveCursorToCell = (row: number, cell: number) => {
-    if (row !== cursorPosition.row) return
+    if (row !== cursorPosition.row || gameStatus !== GameState.PLAYING) return
 
     setCursorPosition({
       row: cursorPosition.row,
@@ -136,8 +150,9 @@ export default function Home() {
   }
 
   const processKeyInput = (key: string) => {
+    if (gameStatus !== GameState.PLAYING) return
     const canFillCell = isValidLetter(key) && canMoveToNextCell(cursorPosition.cell)
-    const canEnterRow = key === "Enter" && canMoveToNextRow(cursorPosition.row)
+    const canEnterRow = key === "Enter" && canMoveToNextRow(cursorPosition.row) && isValidWord()
     const canBackspace = key === "Backspace"
 
     if (canFillCell) {
@@ -159,8 +174,6 @@ export default function Home() {
       if (hasEmptyCell) return
 
       const availableLetters = { ...letterCount }
-
-
 
       const attemptEvaluation: Cell[] = []
       currentRow.forEach(({ value }, index) => {
@@ -193,12 +206,13 @@ export default function Home() {
 
 
       if (hasWon) {
-        // hacerlo con un estado para poder detectar si perdio
-        setTimeout(() => {
-          alert("GANASTE")
-        }, 250)
+        setGameStatus(GameState.WON)
       } else {
-        setCursorPosition(advanceToNextRow())
+        if (cursorPosition.row === maxRowIndex) {
+          setGameStatus(GameState.LOST)
+        } else {
+          setCursorPosition(advanceToNextRow())
+        }
       }
     }
 
@@ -225,7 +239,6 @@ export default function Home() {
   }
 
   const cellStyle = (state: LetterState) => {
-    console.log("here", state)
     if (state === LetterState.HIT) {
       return styles.hit
     }
@@ -241,58 +254,80 @@ export default function Home() {
     return null
   }
 
+  const isValidWord = (): boolean => {
+    const word = board[cursorPosition.row].map((cell) => cell.value).join('').toLowerCase();
+
+    const invalidPatterns = [
+      /[bcdfghjklmnpqrstvwxyzñ]{4,}/i,
+
+      /(.)\1{2,}/i,
+
+
+      /^[aeiou]+$/i,
+
+
+      /^[bcdfghjklmnpqrstvwxyzñ]+$/i,
+
+
+      /[aeiou]{4,}/i,
+
+
+      /q(?!u)/i,
+
+      /[wxz]/i
+    ];
+
+    return !invalidPatterns.some(pattern => pattern.test(word));
+  };
+
 
   return (
-    <>
-      <header>
-        <h1>Criollazo</h1>
-      </header>
-      <main className={styles.game}>
-        {isLoading ? <p>Cargando tablero...</p> : (
 
-          <>
-            <section className={styles.board}>
-              {
-                board.map((row, rowIndex) => {
-                  return (
-                    <div key={`row_${rowIndex}`} className={styles.row}>
-                      {
-                        row.map((cell, cellIndex) => {
-                          console.log(cell.value, cell.state)
-                          return (
-                            <div key={`row_${rowIndex}_col${cellIndex}`} className={`${styles.cell} ${cellIndex === cursorPosition.cell && rowIndex === cursorPosition.row && styles.cellCurrent} ${cell.state !== LetterState.EMPTY && cell.state !== LetterState.FILLED ? cellStyle(cell.state) : ''}`}
+    <main className={styles.game}>
+      {isLoading ? <p>Cargando tablero...</p> : (
 
-                              onClick={() => moveCursorToCell(rowIndex, cellIndex)}
-                            >
-                              {cell.value}
-                            </div>
-                          )
-                        })
-                      }
-
-                    </div>
-                  )
-                })
-              }
-            </section>
-            <section className={styles.keyboard}>
-              {KEYBOARD_LAYOUT.map((row, rowIndex) => {
+        <>
+          <section className={styles.board}>
+            {
+              board.map((row, rowIndex) => {
                 return (
-                  <div className={styles.keyboardRow} key={`keyboard_${rowIndex}`}>
-                    {row.map((key) => {
-                      return (
-                        <button key={key.key} className={styles.key} onClick={() => processKeyInput(key.key)}>
-                          {key.value}
-                        </button>
-                      )
-                    })}
+                  <div key={`row_${rowIndex}`} className={styles.row}>
+                    {
+                      row.map((cell, cellIndex) => {
+                        return (
+                          <div key={`row_${rowIndex}_col${cellIndex}`} className={`${styles.cell} ${cellIndex === cursorPosition.cell && rowIndex === cursorPosition.row && styles.cellCurrent} ${cell.state !== LetterState.EMPTY && cell.state !== LetterState.FILLED ? cellStyle(cell.state) : ''}`}
+
+                            onClick={() => moveCursorToCell(rowIndex, cellIndex)}
+                          >
+                            {cell.value}
+                          </div>
+                        )
+                      })
+                    }
+
                   </div>
                 )
-              })}
-            </section>
-          </>
-        )}
-      </main>
-    </>
+              })
+            }
+          </section>
+          <section className={styles.keyboard}>
+            {KEYBOARD_LAYOUT.map((row, rowIndex) => {
+              return (
+                <div className={styles.keyboardRow} key={`keyboard_${rowIndex}`}>
+                  {row.map((key) => {
+                    return (
+                      <button key={key.key} className={styles.key} onClick={() => processKeyInput(key.key)}>
+                        {key.value}
+                      </button>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </section>
+        </>
+      )}
+    </main>
+
   );
 }

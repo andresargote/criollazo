@@ -64,7 +64,7 @@ const KEYBOARD_LAYOUT: Key[][] = [
   ]
 ]
 
-const SECRET_WORD = "TUCUSO"
+const SECRET_WORD = "BONCHE"
 
 export default function Home() {
 

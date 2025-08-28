@@ -465,7 +465,7 @@ export default function Home() {
       <footer className={styles.footer}>
         <div className={styles.footerContent}>
           <h3>Criollazo</h3>
-          <p>&copy; 2024 Todos los derechos reservados</p>
+          <p>&copy; 2025 Todos los derechos reservados</p>
           <p className={styles.credits}>
             Creado por: <strong>Andrés Argote</strong> y vibecodeado con <strong>Claude</strong>
           </p>

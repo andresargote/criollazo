@@ -1,29 +1,19 @@
-/*
-TODO PARA MVP JUGABLE (1-2 DIAS MAX):
-
-ESTADO ACTUAL:
-✓ Algoritmo de evaluacion (HIT/CLOSE/MISS) - FUNCIONA PERFECTO
-✓ Grid funcional con navegacion
-✓ Teclado virtual
-✓ Validacion de entrada
-✓ Estado de attempts guardandose
-
-MINIMO PARA VERSION JUGABLE:
-2. LOGICA DE FIN DE JUEGO
-   - Boton "Jugar de nuevo"
-
-3. ARRAY DE PALABRAS
-   - Lista local de ~20 palabras
-   - Funcion getRandomWord()
-   - Reemplazar SECRET_WORD hardcodeada
-*/
-
 "use client"
 import styles from "./styles/page.module.css";
 import { useEffect, useMemo, useState } from "react";
 import { Key, GridPosition, LetterCount, LetterState, Cell, GameState } from "./types";
 import useBoard from "./hooks/useBoard";
 import { useBoardNavigation } from "./hooks/useBoardNavigation";
+import {
+  playSound,
+  initializeAudio,
+  getRandomWord,
+  isValidLetter,
+  isValidWord,
+  evaluateAttempt,
+  hasWon,
+  calculateLetterCount
+} from "./utils";
 
 
 const KEYBOARD_LAYOUT: Key[][] = [
@@ -52,7 +42,7 @@ const KEYBOARD_LAYOUT: Key[][] = [
     { key: "Ñ", value: "Ñ" }
   ],
   [
-    { key: 'Enter', value: 'ENTER' },
+    { key: 'ENTER', value: 'ENTER' },
     { key: 'Z', value: 'Z' },
     { key: 'X', value: 'X' },
     { key: 'C', value: 'C' },
@@ -60,17 +50,22 @@ const KEYBOARD_LAYOUT: Key[][] = [
     { key: 'B', value: 'B' },
     { key: 'N', value: 'N' },
     { key: 'M', value: 'M' },
-    { key: 'Backspace', value: '←' }
+    { key: 'BACKSPACE', value: '←' }
   ]
 ]
 
-const SECRET_WORD = "BONCHE"
+
 
 export default function Home() {
+  const [audioInitialized, setAudioInitialized] = useState(false)
+  const [secretWord, setSecretWord] = useState(getRandomWord())
+  const [showHowToPlay, setShowHowToPlay] = useState(false)
+  const [showGameOver, setShowGameOver] = useState(false)
+  const [attempts, setAttempts] = useState(0)
 
   const { isLoading, board, updateBoard, maxCellIndex, maxRowIndex } = useBoard({
-    cellsPerRow: SECRET_WORD.length,
-    totalRows: SECRET_WORD.length > 6 ? 6 : SECRET_WORD.length + 1
+    cellsPerRow: secretWord.length,
+    totalRows: secretWord.length >= 6 ? 6 : secretWord.length + 1
   })
 
   const [cursorPosition, setCursorPosition] = useState<GridPosition>({
@@ -87,44 +82,73 @@ export default function Home() {
 
   const [gameStatus, setGameStatus] = useState<string>(GameState.PLAYING)
 
-  const letterCount = useMemo(() => {
-    const count: LetterCount = {}
-
-    for (const letter of SECRET_WORD) {
-      count[letter] = (count[letter] || 0) + 1
-    }
-
-    return count
-
-
-  }, [SECRET_WORD])
+  const letterCount = useMemo(() => calculateLetterCount(secretWord), [secretWord])
 
   useEffect(() => {
     if (gameStatus === GameState.WON) {
       setTimeout(() => {
-        alert("Ganaste!")
+        playSound('win')
+        setShowGameOver(true)
       }, 500)
     }
 
     if (gameStatus === GameState.LOST) {
       setTimeout(() => {
-        alert("Perdiste!")
+        playSound('lose')
+        setShowGameOver(true)
       }, 500)
     }
 
   }, [gameStatus])
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const key = event.key.toUpperCase()
+
+      if (event.key === 'Escape') {
+        if (showHowToPlay) {
+          setShowHowToPlay(false)
+          return
+        }
+        if (showGameOver) {
+          setShowGameOver(false)
+          return
+        }
+      }
+
+      if (event.target && (event.target as HTMLElement).tagName === 'BUTTON') {
+        return
+      }
+
+      if (event.metaKey || event.ctrlKey || event.altKey || (event.shiftKey && key !== event.key.toUpperCase())) {
+        return
+      }
+
+      if (showHowToPlay || showGameOver) {
+        return
+      }
+
+      if (key === "ENTER" || key === "BACKSPACE" || isValidLetter(key)) {
+        event.preventDefault()
+        processKeyInput(key)
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [board, gameStatus, cursorPosition, showHowToPlay, showGameOver])
+
   const moveCursorToCell = (row: number, cell: number) => {
+    handleInitializeAudio();
     if (row !== cursorPosition.row || gameStatus !== GameState.PLAYING) return
 
     setCursorPosition({
       row: cursorPosition.row,
       cell
     })
-  }
-
-  const isValidLetter = (character: string) => {
-    return /^[A-ZÑ]$/u.test(character)
   }
 
   const advanceToNextCell = (): GridPosition => {
@@ -149,11 +173,43 @@ export default function Home() {
     }
   }
 
+  const handleInitializeAudio = () => {
+    if (!audioInitialized) {
+      const initialized = initializeAudio();
+      if (initialized) {
+        setAudioInitialized(true);
+      }
+    }
+  };
+
+  const startNewGame = () => {
+    const newWord = getRandomWord();
+    setSecretWord(newWord);
+    setGameStatus(GameState.PLAYING);
+    setAttempts(0);
+    setCursorPosition({ row: 0, cell: 0 });
+    setShowGameOver(false);
+
+    window.location.reload();
+  };
+
   const processKeyInput = (key: string) => {
+    handleInitializeAudio();
     if (gameStatus !== GameState.PLAYING) return
     const canFillCell = isValidLetter(key) && canMoveToNextCell(cursorPosition.cell)
-    const canEnterRow = key === "Enter" && canMoveToNextRow(cursorPosition.row) && isValidWord()
-    const canBackspace = key === "Backspace"
+    const currentWord = board[cursorPosition.row].map((cell) => cell.value).join('')
+    const canEnterRow = key === "ENTER" && canMoveToNextRow(cursorPosition.row) && isValidWord(currentWord)
+    const canBackspace = key === "BACKSPACE"
+
+    if (key === "ENTER" && (!canMoveToNextRow(cursorPosition.row) || !isValidWord(currentWord))) {
+      playSound('error')
+      return
+    }
+
+    if (isValidLetter(key) && !canMoveToNextCell(cursorPosition.cell)) {
+      playSound('error')
+      return
+    }
 
     if (canFillCell) {
       const updatedBoard = [...board]
@@ -164,6 +220,7 @@ export default function Home() {
 
       updateBoard(updatedBoard)
       setCursorPosition(advanceToNextCell())
+      playSound('key')
       return
     }
 
@@ -171,44 +228,24 @@ export default function Home() {
       const currentRow = board[cursorPosition.row]
       const hasEmptyCell = currentRow.find((cell) => cell.state === LetterState.EMPTY)
 
-      if (hasEmptyCell) return
+      if (hasEmptyCell) {
+        playSound('error')
+        return
+      }
 
-      const availableLetters = { ...letterCount }
-
-      const attemptEvaluation: Cell[] = []
-      currentRow.forEach(({ value }, index) => {
-        const secretLetter = SECRET_WORD[index]
-        if (value === secretLetter) {
-          availableLetters[secretLetter] -= 1
-          attemptEvaluation.push({
-            value,
-            state: LetterState.HIT
-          })
-        } else if (availableLetters[value] && availableLetters[value] > 0) {
-          availableLetters[value] -= 1
-          attemptEvaluation.push({
-            value,
-            state: LetterState.CLOSE
-          })
-        } else {
-          attemptEvaluation.push({
-            value,
-            state: LetterState.MISS
-          })
-        }
-      })
-
-
-      const hasWon = attemptEvaluation.every(cell => cell.state === LetterState.HIT)
+      const attemptEvaluation = evaluateAttempt(currentRow, secretWord, letterCount)
+      const gameWon = hasWon(attemptEvaluation)
       const updatedBoard = [...board]
       updatedBoard[cursorPosition.row] = attemptEvaluation
       updateBoard(updatedBoard)
+      playSound('enter')
 
-
-      if (hasWon) {
+      if (gameWon) {
+        setAttempts(cursorPosition.row + 1)
         setGameStatus(GameState.WON)
       } else {
         if (cursorPosition.row === maxRowIndex) {
+          setAttempts(cursorPosition.row + 1)
           setGameStatus(GameState.LOST)
         } else {
           setCursorPosition(advanceToNextRow())
@@ -234,6 +271,7 @@ export default function Home() {
 
       updateBoard(updatedBoard)
       setCursorPosition(moveToPreviousCell())
+      playSound('backspace')
       return
     }
   }
@@ -254,80 +292,187 @@ export default function Home() {
     return null
   }
 
-  const isValidWord = (): boolean => {
-    const word = board[cursorPosition.row].map((cell) => cell.value).join('').toLowerCase();
 
-    const invalidPatterns = [
-      /[bcdfghjklmnpqrstvwxyzñ]{4,}/i,
-
-      /(.)\1{2,}/i,
-
-
-      /^[aeiou]+$/i,
-
-
-      /^[bcdfghjklmnpqrstvwxyzñ]+$/i,
-
-
-      /[aeiou]{4,}/i,
-
-
-      /q(?!u)/i,
-
-      /[wxz]/i
-    ];
-
-    return !invalidPatterns.some(pattern => pattern.test(word));
-  };
 
 
   return (
+    <>
 
-    <main className={styles.game}>
-      {isLoading ? <p>Cargando tablero...</p> : (
+      <main className={styles.game} role="main" aria-label="Juego de palabras Criollazo">
+        {isLoading ? <p>Cargando tablero...</p> : (
 
-        <>
-          <section className={styles.board}>
-            {
-              board.map((row, rowIndex) => {
+          <>
+            <div className={styles.gameHeader}>
+              <button
+                className={styles.howToPlayButton}
+                onClick={() => setShowHowToPlay(true)}
+                aria-label="Mostrar instrucciones del juego"
+              >
+                ¿Cómo jugar?
+              </button>
+            </div>
+            <section className={styles.board} role="grid" aria-label={`Tablero de juego, palabra secreta de ${secretWord.length} letras`}>
+              {
+                board.map((row, rowIndex) => {
+                  return (
+                    <div key={`row_${rowIndex}`} className={styles.row} role="row" aria-label={`Fila ${rowIndex + 1}`}>
+                      {
+                        row.map((cell, cellIndex) => {
+                          return (
+                            <div
+                              key={`row_${rowIndex}_col${cellIndex}`}
+                              className={`${styles.cell} ${cellIndex === cursorPosition.cell && rowIndex === cursorPosition.row && styles.cellCurrent} ${cell.state !== LetterState.EMPTY && cell.state !== LetterState.FILLED ? cellStyle(cell.state) : ''}`}
+                              onClick={() => moveCursorToCell(rowIndex, cellIndex)}
+                              tabIndex={gameStatus === GameState.PLAYING && rowIndex === cursorPosition.row ? 0 : -1}
+                              role="button"
+                              aria-label={`Celda ${cellIndex + 1} de la fila ${rowIndex + 1}${cell.value ? `, contiene ${cell.value}` : ', vacía'}${cell.state === LetterState.HIT ? ', correcta' : cell.state === LetterState.CLOSE ? ', letra correcta posición incorrecta' : cell.state === LetterState.MISS ? ', letra incorrecta' : ''}`}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault()
+                                  moveCursorToCell(rowIndex, cellIndex)
+                                }
+                              }}
+                            >
+                              {cell.value}
+                            </div>
+                          )
+                        })
+                      }
+
+                    </div>
+                  )
+                })
+              }
+            </section>
+            <section className={styles.keyboard} role="group" aria-label="Teclado virtual">
+              {KEYBOARD_LAYOUT.map((row, rowIndex) => {
                 return (
-                  <div key={`row_${rowIndex}`} className={styles.row}>
-                    {
-                      row.map((cell, cellIndex) => {
-                        return (
-                          <div key={`row_${rowIndex}_col${cellIndex}`} className={`${styles.cell} ${cellIndex === cursorPosition.cell && rowIndex === cursorPosition.row && styles.cellCurrent} ${cell.state !== LetterState.EMPTY && cell.state !== LetterState.FILLED ? cellStyle(cell.state) : ''}`}
-
-                            onClick={() => moveCursorToCell(rowIndex, cellIndex)}
-                          >
-                            {cell.value}
-                          </div>
-                        )
-                      })
-                    }
-
+                  <div className={styles.keyboardRow} key={`keyboard_${rowIndex}`}>
+                    {row.map((key) => {
+                      return (
+                        <button
+                          key={key.key}
+                          className={styles.key}
+                          onClick={() => processKeyInput(key.key)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              processKeyInput(key.key)
+                            }
+                          }}
+                          aria-label={
+                            key.key === 'Enter' ? 'Confirmar palabra' :
+                              key.key === 'Backspace' ? 'Borrar letra' :
+                                `Escribir letra ${key.value}`
+                          }
+                          disabled={gameStatus !== GameState.PLAYING}
+                        >
+                          {key.value}
+                        </button>
+                      )
+                    })}
                   </div>
                 )
-              })
-            }
-          </section>
-          <section className={styles.keyboard}>
-            {KEYBOARD_LAYOUT.map((row, rowIndex) => {
-              return (
-                <div className={styles.keyboardRow} key={`keyboard_${rowIndex}`}>
-                  {row.map((key) => {
-                    return (
-                      <button key={key.key} className={styles.key} onClick={() => processKeyInput(key.key)}>
-                        {key.value}
-                      </button>
-                    )
-                  })}
+              })}
+            </section>
+
+
+          </>
+        )}
+
+        {showHowToPlay && (
+          <div className={styles.modalOverlay} role="dialog" aria-labelledby="modal-title" aria-modal="true">
+            <div className={styles.modal}>
+              <div className={styles.modalHeader}>
+                <h2 id="modal-title">¿Cómo jugar Criollazo?</h2>
+                <button
+                  className={styles.closeButton}
+                  onClick={() => setShowHowToPlay(false)}
+                  aria-label="Cerrar modal"
+                >
+                  ×
+                </button>
+              </div>
+              <div className={styles.modalContent}>
+                <p>¡Bienvenido a <strong>Criollazo</strong>! El juego de palabras venezolanas.</p>
+
+                <h3>Objetivo:</h3>
+                <p>Adivina la palabra venezolana secreta de 5 letras en máximo 6 intentos.</p>
+
+                <h3>Cómo jugar:</h3>
+                <ul>
+                  <li>• Escribe una palabra de 5 letras y presiona Enter</li>
+                  <li>• Las letras cambiarán de color para darte pistas:</li>
+                </ul>
+
+                <div className={styles.colorGuide}>
+                  <div className={styles.exampleRow}>
+                    <div className={`${styles.exampleCell} ${styles.hit}`}>A</div>
+                    <span>Verde: La letra está en la posición correcta</span>
+                  </div>
+                  <div className={styles.exampleRow}>
+                    <div className={`${styles.exampleCell} ${styles.close}`}>R</div>
+                    <span>Amarillo: La letra está en la palabra pero en otra posición</span>
+                  </div>
+                  <div className={styles.exampleRow}>
+                    <div className={`${styles.exampleCell} ${styles.miss}`}>E</div>
+                    <span>Gris: La letra no está en la palabra</span>
+                  </div>
                 </div>
-              )
-            })}
-          </section>
-        </>
-      )}
-    </main>
+
+                <h3>Palabras:</h3>
+                <p>Solo palabras <strong>venezolanas</strong> como: AREPA, CHAMO, PANA, VAINA...</p>
+
+                <p><strong>¡Échale bolas y a jugar!</strong></p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showGameOver && (
+          <div className={styles.modalOverlay} role="dialog" aria-labelledby="gameover-title" aria-modal="true">
+            <div className={styles.modal}>
+              <div className={styles.modalHeader}>
+                <h2 id="gameover-title">
+                  {gameStatus === GameState.WON ? '¡Ganaste, pana!' : '¡Se acabó la vaina!'}
+                </h2>
+              </div>
+              <div className={styles.modalContent}>
+                {gameStatus === GameState.WON ? (
+                  <>
+                    <p>¡Brutal! Adivinaste la palabra <strong>{secretWord}</strong></p>
+                    <p>Lo lograste en <strong>{attempts}</strong> {attempts === 1 ? 'intento' : 'intentos'}</p>
+                  </>
+                ) : (
+                  <>
+                    <p>No pudiste adivinar la palabra</p>
+                    <p>La palabra era: <strong>{secretWord}</strong></p>
+                  </>
+                )}
+
+                <button
+                  className={styles.playAgainButton}
+                  onClick={startNewGame}
+                  aria-label="Iniciar nuevo juego"
+                >
+                  Jugar de nuevo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+      <footer className={styles.footer}>
+        <div className={styles.footerContent}>
+          <h3>Criollazo</h3>
+          <p>&copy; 2024 Todos los derechos reservados</p>
+          <p className={styles.credits}>
+            Creado por: <strong>Andrés Argote</strong> y vibecodeado con <strong>Claude</strong>
+          </p>
+        </div>
+      </footer>
+    </>
+
 
   );
 }

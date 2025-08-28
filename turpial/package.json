@@ -1,6 +1,9 @@
 {
-  "name": "turpial",
-  "version": "0.1.0",
+  "name": "criollazo",
+  "version": "1.0.0",
+  "description": "Un juego de palabras venezolanas inspirado en Wordle",
+  "license": "MIT",
+  "author": "Andrés Argote",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

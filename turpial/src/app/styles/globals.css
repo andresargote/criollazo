@@ -1,17 +1,13 @@
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
+:root {
+  --background: #fefefe;
+  --blue-gray: #E2E8F0;
+  --dark: #1d1d1d;
+  --blue: #003DA5;
+  --yellow: #FCE300;
+  --red: #EF3340;
+  --white: #ffffff;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui;
-  background-image: url('/salto-angel.webp');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-}
 
 * {
   box-sizing: border-box;
@@ -19,7 +15,38 @@ body {
   margin: 0;
 }
 
+
+html {
+  font-size: 4px;
+}
+
+body {
+  background-color: var(--background);
+  font-size: 4rem;
+  color: var(--dark);
+}
+
 a {
   color: inherit;
   text-decoration: none;
+}
+
+button {
+  font-family: var(--font-family-nunito);
+}
+
+.hit {
+  background-color: var(--blue);
+  color: var(--white);
+  box-shadow: 0px 1px rgba(0, 45, 120, 0.48)
+}
+
+.close {
+  background-color: var(--yellow);
+  box-shadow: 0px 1px rgba(201, 181, 0, 0.48);
+}
+
+.miss {
+  background-color: var(--red);
+  box-shadow: 0px 1px rgba(178, 32, 42, 0.48);
 }

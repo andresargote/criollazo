@@ -1,7 +1,7 @@
 "use client"
 import styles from "./styles/page.module.css";
 import { useEffect, useMemo, useState } from "react";
-import { Key, GridPosition, LetterCount, LetterState, Cell, GameState } from "./types";
+import { GridPosition, LetterState, GameState } from "./types";
 import useBoard from "./hooks/useBoard";
 import { useBoardNavigation } from "./hooks/useBoardNavigation";
 import {
@@ -14,46 +14,8 @@ import {
   hasWon,
   calculateLetterCount
 } from "./utils";
-
-
-const KEYBOARD_LAYOUT: Key[][] = [
-  [
-    { key: 'Q', value: 'Q' },
-    { key: 'W', value: 'W' },
-    { key: 'E', value: 'E' },
-    { key: 'R', value: 'R' },
-    { key: 'T', value: 'T' },
-    { key: 'Y', value: 'Y' },
-    { key: 'U', value: 'U' },
-    { key: 'I', value: 'I' },
-    { key: 'O', value: 'O' },
-    { key: 'P', value: 'P' }
-  ],
-  [
-    { key: 'A', value: 'A' },
-    { key: 'S', value: 'S' },
-    { key: 'D', value: 'D' },
-    { key: 'F', value: 'F' },
-    { key: 'G', value: 'G' },
-    { key: 'H', value: 'H' },
-    { key: 'J', value: 'J' },
-    { key: 'K', value: 'K' },
-    { key: 'L', value: 'L' },
-    { key: "Ñ", value: "Ñ" }
-  ],
-  [
-    { key: 'ENTER', value: 'ENTER' },
-    { key: 'Z', value: 'Z' },
-    { key: 'X', value: 'X' },
-    { key: 'C', value: 'C' },
-    { key: 'V', value: 'V' },
-    { key: 'B', value: 'B' },
-    { key: 'N', value: 'N' },
-    { key: 'M', value: 'M' },
-    { key: 'BACKSPACE', value: '←' }
-  ]
-]
-
+import { Keyboard } from "./components/Keyboard";
+import { Header } from "./components/Header";
 
 
 export default function Home() {
@@ -297,7 +259,7 @@ export default function Home() {
 
   return (
     <>
-
+      <Header />
       <main className={styles.game} role="main" aria-label="Juego de palabras Criollazo">
         {isLoading ? <p>Cargando tablero...</p> : (
 
@@ -344,39 +306,7 @@ export default function Home() {
                 })
               }
             </section>
-            <section className={styles.keyboard} role="group" aria-label="Teclado virtual">
-              {KEYBOARD_LAYOUT.map((row, rowIndex) => {
-                return (
-                  <div className={styles.keyboardRow} key={`keyboard_${rowIndex}`}>
-                    {row.map((key) => {
-                      return (
-                        <button
-                          key={key.key}
-                          className={styles.key}
-                          onClick={() => processKeyInput(key.key)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault()
-                              processKeyInput(key.key)
-                            }
-                          }}
-                          aria-label={
-                            key.key === 'Enter' ? 'Confirmar palabra' :
-                              key.key === 'Backspace' ? 'Borrar letra' :
-                                `Escribir letra ${key.value}`
-                          }
-                          disabled={gameStatus !== GameState.PLAYING}
-                        >
-                          {key.value}
-                        </button>
-                      )
-                    })}
-                  </div>
-                )
-              })}
-            </section>
-
-
+            <Keyboard onKeyPressed={processKeyInput} gameStatus={gameStatus as GameState} />
           </>
         )}
 

@@ -24,6 +24,7 @@ body {
   background-color: var(--background);
   font-size: 4rem;
   color: var(--dark);
+  line-height: 1.5;
 }
 
 a {
@@ -38,15 +39,15 @@ button {
 .hit {
   background-color: var(--blue);
   color: var(--white);
-  box-shadow: 0px 1px rgba(0, 45, 120, 0.48)
+  box-shadow: 0 1px 0 rgba(0, 45, 120, 0.48);
 }
 
 .close {
   background-color: var(--yellow);
-  box-shadow: 0px 1px rgba(201, 181, 0, 0.48);
+  box-shadow: 0 1px 0 rgba(201, 181, 0, 0.48);
 }
 
 .miss {
   background-color: var(--red);
-  box-shadow: 0px 1px rgba(178, 32, 42, 0.48);
+  box-shadow: 0 1px 0 rgba(178, 32, 42, 0.48);
 }

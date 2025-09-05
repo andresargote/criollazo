@@ -1,9 +1,14 @@
 import wordsData from '../data/words.json';
+import { WordWithHint } from '../types';
 
-export const getRandomWord = (): string => {
-    const words = wordsData.venezuelanWords;
+export const getRandomWordWithHint = (): WordWithHint => {
+    const words = wordsData.venezuelanWords as WordWithHint[];
     const randomIndex = Math.floor(Math.random() * words.length);
     return words[randomIndex];
+};
+
+export const getRandomWord = (): string => {
+    return getRandomWordWithHint().word;
 };
 
 export const isValidLetter = (character: string): boolean => {

@@ -1,7 +1,6 @@
 .header {
-    padding: 4rem 0rem;
+    padding: 4rem 1rem;
     margin: 0 auto;
-    max-width: 768px;
     display: flex;
     justify-content: center;
 }
@@ -9,13 +8,13 @@
 .logo {
     font-size: 6rem;
     display: flex;
-    gap: 0.5rem;
+    gap: 1rem;
 }
 
 .tile {
     width: 8rem;
     height: 8rem;
     display: inline-block;
-    border-radius: 4px;
+    border-radius: 1rem;
     text-align: center;
 }

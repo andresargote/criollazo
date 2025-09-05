@@ -1,11 +1,6 @@
-export type Cell = {
+export type Letter = {
     value: string;
     state: LetterState;
-}
-
-export type GridPosition = {
-    row: number;
-    cell: number;
 }
 
 export type Key = {
@@ -21,8 +16,14 @@ export enum LetterState {
     HIT = "hit",
     CLOSE = "close",
     MISS = "miss",
-    EMPTY = "empty",
-    FILLED = "filled"
+    // EMPTY = "empty",
+    // FILLED = "filled"
+}
+
+export type WordWithHint = {
+    word: string;
+    hint: string;
+    wordLength: number;
 }
 
 export enum GameState {

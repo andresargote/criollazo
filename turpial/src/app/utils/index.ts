@@ -1,13 +1,13 @@
-import { generateBoard } from "./generateBoard";
-import { playSound, initializeAudio, type SoundType } from "./audioUtils";
-import { getRandomWord, isValidLetter, isValidWord } from "./wordUtils";
-import { evaluateAttempt, hasWon, calculateLetterCount } from "./gameUtils";
+
+import { playSound, initializeAudio, type SoundType } from "./audio";
+import { getRandomWord, getRandomWordWithHint, isValidLetter, isValidWord } from "./word";
+import { evaluateAttempt, hasWon, calculateLetterCount } from "./game";
 
 export {
-    generateBoard,
     playSound,
     initializeAudio,
     getRandomWord,
+    getRandomWordWithHint,
     isValidLetter,
     isValidWord,
     evaluateAttempt,

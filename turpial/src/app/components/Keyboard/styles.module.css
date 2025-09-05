@@ -2,13 +2,13 @@
     display: flex;
     flex-direction: column;
     gap: clamp(1rem, 3vw, 2rem);
-    padding: clamp(0.25rem, 1.5vw, 1rem);
+    padding: clamp(1rem, 1.5vw, 2rem);
 }
 
 .keyboardRow {
     display: grid;
     grid-template-columns: repeat(11, 1fr);
-    gap: clamp(0.25rem, 1vw, 1rem);
+    gap: clamp(0.5rem, 1vw, 1rem);
     max-width: 768px;
 }
 
@@ -16,22 +16,26 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: clamp(0.5rem, 2vw, 1rem);
+    padding: clamp(1rem, 2vw, 1.5rem);
     width: 100%;
-    min-width: 28px;
+    min-width: 7rem;
     aspect-ratio: 4/5;
     grid-column: span 1;
     font-size: clamp(4rem, 6vw, 8.5rem);
     border: none;
-    border-radius: clamp(4px, 1vw, 8px);
+    border-radius: clamp(1rem, 1vw, 2rem);
     background-color: var(--blue-gray);
-    box-shadow: 0px 2px rgba(148, 163, 184, 0.48);
+    box-shadow: 0 2px 0 rgba(148, 163, 184, 0.48);
     font-weight: bold;
     color: var(--dark);
     cursor: pointer;
+    transition: transform 0.1s ease;
 }
 
-
+.key:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 rgba(148, 163, 184, 0.48);
+}
 
 .keyLarge {
     grid-column: span 3;

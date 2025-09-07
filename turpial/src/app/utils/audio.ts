@@ -44,12 +44,6 @@ export const playSound = (type: SoundType) => {
                 gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.15);
                 oscillator.type = 'triangle';
                 break;
-            case 'backspace':
-                oscillator.frequency.setValueAtTime(400, context.currentTime);
-                gainNode.gain.setValueAtTime(0.08, context.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.08);
-                oscillator.type = 'sawtooth';
-                break;
             case 'win':
                 oscillator.frequency.setValueAtTime(523, context.currentTime);
                 oscillator.frequency.setValueAtTime(659, context.currentTime + 0.1);

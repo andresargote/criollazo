@@ -1,89 +1,89 @@
 {
-    "venezuelanWords": [
-        {
-            "word": "AREPA",
-            "hint": "Comida típica venezolana hecha de masa de maíz",
-            "wordLength": 5
-        },
-        {
-            "word": "BAGRE",
-            "hint": "Pez de agua dulce muy común en Venezuela",
-            "wordLength": 5
-        },
-        {
-            "word": "BEMBA",
-            "hint": "Labios grandes o boca prominente",
-            "wordLength": 5
-        },
-        {
-            "word": "BONCHE",
-            "hint": "Fiesta o reunión social animada",
-            "wordLength": 6
-        },
-        {
-            "word": "BURDA",
-            "hint": "Mucho, una gran cantidad de algo",
-            "wordLength": 5
-        },
-        {
-            "word": "CHAMO",
-            "hint": "Manera cariñosa de llamar a un joven",
-            "wordLength": 5
-        },
-        {
-            "word": "CHIVO",
-            "hint": "Animal de granja o algo que no funciona bien",
-            "wordLength": 5
-        },
-        {
-            "word": "PANA",
-            "hint": "Amigo cercano o compañero de confianza",
-            "wordLength": 4
-        },
-        {
-            "word": "VAINA",
-            "hint": "Cosa, objeto o situación cualquiera",
-            "wordLength": 5
-        },
-        {
-            "word": "GAFO",
-            "hint": "Persona con mala suerte o torpe",
-            "wordLength": 4
-        },
-        {
-            "word": "PAJUO",
-            "hint": "Persona del campo o pueblo pequeño",
-            "wordLength": 5
-        },
-        {
-            "word": "SAPO",
-            "hint": "Animal anfibio o persona chismosa",
-            "wordLength": 4
-        },
-        {
-            "word": "MUSIU",
-            "hint": "Señor elegante o persona refinada",
-            "wordLength": 5
-        },
-        {
-            "word": "JEVA",
-            "hint": "Novia o chica que le gusta a alguien",
-            "wordLength": 4
-        },
-        {
-            "word": "NICHE",
-            "hint": "Persona de clase alta o adinerada",
-            "wordLength": 5
-        },
-        {
-            "word": "ZAMURO",
-            "hint": "Ave carroñera que vuela en círculos",
-            "wordLength": 6
-        },
-        {
-            "word": "PAVO",
-            "hint": "Ave de corral o persona ingenua",
-            "wordLength": 4
-        }
-    ]
+  "venezuelanWords": [
+    {
+      "word": "AREPA",
+      "hint": "Comida venezolana hecha con masa de maíz, base de la dieta nacional",
+      "wordLength": 5
+    },
+    {
+      "word": "BAGRE",
+      "hint": "Pez de agua dulce; también usado para referirse a alguien feo",
+      "wordLength": 5
+    },
+    {
+      "word": "BEMBA",
+      "hint": "Labios grandes o boca pronunciada",
+      "wordLength": 5
+    },
+    {
+      "word": "BONCHE",
+      "hint": "Fiesta, rumba o reunión animada",
+      "wordLength": 6
+    },
+    {
+      "word": "BURDA",
+      "hint": "Mucho, en exceso o gran cantidad",
+      "wordLength": 5
+    },
+    {
+      "word": "CHAMO",
+      "hint": "Forma coloquial de llamar a un joven o amigo",
+      "wordLength": 5
+    },
+    {
+      "word": "CHIVO",
+      "hint": "Animal de granja; también problema técnico o falla",
+      "wordLength": 5
+    },
+    {
+      "word": "PANA",
+      "hint": "Amigo cercano, compañero de confianza",
+      "wordLength": 4
+    },
+    {
+      "word": "VAINA",
+      "hint": "Cosa, asunto o situación cualquiera",
+      "wordLength": 5
+    },
+    {
+      "word": "GAFO",
+      "hint": "Persona ingenua, torpe o tonta",
+      "wordLength": 4
+    },
+    {
+      "word": "PAJUO",
+      "hint": "Insulto coloquial para alguien bobo, hablador o sin criterio",
+      "wordLength": 5
+    },
+    {
+      "word": "SAPO",
+      "hint": "Animal anfibio; también persona chismosa o soplona",
+      "wordLength": 4
+    },
+    {
+      "word": "MUSIU",
+      "hint": "Forma coloquial de llamar a un extranjero, sobre todo europeo",
+      "wordLength": 5
+    },
+    {
+      "word": "JEVA",
+      "hint": "Novia o muchacha que le gusta a alguien",
+      "wordLength": 4
+    },
+    {
+      "word": "NICHE",
+      "hint": "Persona de gustos considerados vulgares o poco refinados",
+      "wordLength": 5
+    },
+    {
+      "word": "ZAMURO",
+      "hint": "Ave carroñera que suele volar en círculos",
+      "wordLength": 6
+    },
+    {
+      "word": "PAVO",
+      "hint": "Ave de corral; también persona ingenua o distraída",
+      "wordLength": 4
+    }
+  ]
 }

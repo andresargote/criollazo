@@ -14,14 +14,17 @@
   }
 }
 
+@media (min-width: 768px) {
+.board {
+  min-height: 404px;
+}
+
+
 
 .gameContainer {
   flex-grow: 1;
 }
 
-.board {
-  min-height: 404px;
-}
 
 .hintSection {
   text-align: center;

@@ -15,8 +15,9 @@
 }
 
 @media (min-width: 768px) {
-.board {
-  min-height: 404px;
+  .board {
+    min-height: 404px;
+  }
 }
 
 
